@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Census Template</title>
+
+    <style>
+      .invoice-box {
+        max-width: 800px;
+        margin: auto;
+        padding: 30px;
+        font-size: 16px;
+        line-height: 24px;
+        font-family: "Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;
+        color: #555;
+      }
+
+      .invoice-box table {
+        width: 100%;
+        line-height: inherit;
+        text-align: left;
+      }
+
+      .invoice-box table td {
+        padding: 5px;
+        vertical-align: top;
+      }
+
+      /* .invoice-box table tr td:nth-child(4) {
+          text-align: right;
+        } */
+
+      .invoice-box table tr.top table td {
+        padding-bottom: 20px;
+      }
+
+      .invoice-box table tr.top table td.logo {
+        height: 81px;
+        width: 67.5px;
+      }
+
+      .invoice-box table tr.information table td {
+        padding-bottom: 40px;
+      }
+
+      .invoice-box table tr {
+        width: inherit;
+      }
+
+      .invoice-box table tr.heading td {
+        background: #eee;
+        border-bottom: 1px solid #ddd;
+        font-weight: bold;
+      }
+
+      .invoice-box table tr.details td {
+        padding-bottom: 20px;
+      }
+
+      .invoice-box table tr.item td {
+        border-bottom: 1px solid #eee;
+      }
+
+      .invoice-box table tr.item.last td {
+        border-bottom: none;
+      }
+
+      .invoice-box table tr.total td:nth-child(4) {
+        border-top: 2px solid #eee;
+        font-weight: bold;
+      }
+
+      @media only screen and (max-width: 600px) {
+        .invoice-box table tr.top table td {
+          width: 100%;
+          display: block;
+          text-align: center;
+        }
+
+        .invoice-box table tr.information table td {
+          width: 100%;
+          display: block;
+          text-align: center;
+        }
+      }
+
+      /** RTL **/
+      .rtl {
+        direction: rtl;
+        font-family: Tahoma, "Helvetica Neue", "Helvetica", Helvetica, Arial,
+          sans-serif;
+      }
+
+      .rtl table {
+        text-align: right;
+      }
+
+      .rtl table tr td:nth-child(2) {
+        text-align: left;
+      }
+      /** RCD Modifications **/
+
+      .Insurance {
+        color: #333;
+        font-size: 24px;
+      }
+
+      .Temp1 {
+        color: #333;
+        font-size: 24px;
+        font-weight: bold;
+      }
+
+      .Temp2 {
+        color: rgb(143, 48, 48);
+        font-size: 24px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="invoice-box">
+      <table cellpadding="0" cellspacing="0">
+        <tbody id="invoicetbody">
+          <tr class="top">
+            <td colspan="2">
+              <table>
+                <tr>
+                  <td class="logo">
+                    <img
+                      src="icon.png"
+                      style="width: 100%; height: 100%; max-width: 300px"
+                    />
+                  </td>
+
+                  <td>
+                    <a class="Insurance">Insurance</a><br />
+                    <a class="Temp1"></a> <br />
+                    <a class="Temp2"></a> <br />
+                    <a style="font-size: 12px"></a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr class="information">
+            <td colspan="2">
+              <table>
+                <tr>
+                  <td>
+                    123 Nonexistent Rd<br />
+                    Paris, TX 71234<br />
+                    Main: (123) 555-1234<br />
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr class="heading">
+            <td>Customer</td>
+            <td>Type</td>
+            <td>Coverage Month</td>
+            <td>Lives</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </body>
+</html>

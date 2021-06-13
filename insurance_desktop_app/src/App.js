@@ -1,0 +1,560 @@
+import React, { Component } from "react";
+import Sidebar from "./components/Sidebar";
+import "bootstrap/dist/css/bootstrap.css";
+
+import "./components/styles.css";
+import "./components/mystyles.css";
+import Home from "./components/HomeTab";
+import Customer from "./components/CustomerTab";
+import Vendor from "./components/VendorTab";
+import { ErrorModal } from "./components/ExtraModals";
+
+const { ipcRenderer } = window.require("electron");
+
+class App extends Component {
+  state = {
+    tab: "home",
+    qbo: false,
+    appstate: null,
+    // Tab data needed
+    customers: [],
+    vendors: [],
+    policies: [],
+    census: [],
+    censuspremium: [],
+    feespremium: [],
+    billfees: [],
+    items: [],
+    accounts: [],
+
+    invoice: [],
+    bill: [],
+    // Customer tables only
+    censusinvoice: [],
+    censusbilled: [],
+    // Tab state as define by two var
+    customersTab: ["a", "customers", ""],
+    vendorsTab: ["a", "vendors", ""],
+
+    // Username
+    username: "",
+
+    errorModal: false,
+    errorModalTitle: "",
+    errorModalMessage: "",
+  };
+
+  getAppData() {
+    this.getState();
+    this.getCustomers();
+    this.getVendors();
+    this.getPolicies();
+    this.getCensus();
+    this.getCensusPremium();
+    this.getFeesPremium();
+    this.getBillFees();
+    this.getItems();
+    this.getAccounts();
+    this.getCensusInvoice();
+    this.getInvoice();
+    this.getBill();
+    this.getUsername();
+  }
+
+  getUsername = async () => {
+    const newUsername = await ipcRenderer.invoke("username");
+    this.setState({ username: newUsername });
+    console.log(newUsername);
+  };
+
+  componentDidMount() {
+    // Load the customer information
+    this.getAppData();
+    this.timerQBO = setInterval(() => this.isUserSignedInToQBO(), 1000);
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.timerQBO);
+  }
+
+  showErrorModal = (errorTitle, errorMessage) => {
+    this.setState({
+      errorModal: true,
+      errorModalTitle: errorTitle,
+      errorModalMessage: errorMessage,
+    });
+  };
+
+  handleInvoiceCreate = async (invData, invLines, invCensus) => {
+    const statuscode = await ipcRenderer.invoke(
+      "createInvoice",
+      invData,
+      invLines
+    );
+
+    console.log(statuscode);
+
+    if (statuscode === 200) {
+      invCensus.forEach((cen) => {
+        this.handleCensusInsert(cen, false, "Invoice");
+      });
+    } else {
+      this.showErrorModal(
+        "Quickooks Error",
+        "An issue was encounter when creating the invoice in quickbooks online."
+      );
+    }
+
+    this.getCensus();
+    this.getCensusInvoice();
+    this.getInvoice();
+  };
+
+  handleBillCreate = async (billData, billLines, billCensus) => {
+    const statuscode = await ipcRenderer.invoke(
+      "createBill",
+      billData,
+      billLines,
+      billCensus
+    );
+
+    console.log(statuscode);
+
+    if (statuscode === 200) {
+      billCensus.forEach((cen) => {
+        this.handleCensusInsert(cen, false, "Billed");
+      });
+      await ipcRenderer.invoke("generatePDF", billData, billLines, billCensus);
+    } else {
+      this.showErrorModal(
+        "Quickooks Error",
+        "An issue was encounter when creating the invoice in quickbooks online."
+      );
+    }
+
+    this.getCensus();
+    this.getBill();
+  };
+
+  hideErrorModal = () => {
+    this.setState({ errorModal: false });
+  };
+
+  handlePolicyInsert = async (
+    PolicyParams,
+    CensusPremiumParams,
+    FeesPremiumParams,
+    BillFeesParams
+  ) => {
+    console.log("Policy Params");
+    console.log(PolicyParams);
+
+    try {
+      const selectPolicy =
+        "select * from Policy where PID = " + String(PolicyParams.PID);
+
+      const cpol = await ipcRenderer.invoke("execute", selectPolicy);
+      if (cpol.res.length > 0) {
+        await ipcRenderer.invoke("delete", "Policy", { PID: PolicyParams.PID });
+        await ipcRenderer.invoke("delete", "CensusPremium", {
+          PID: PolicyParams.PID,
+        });
+        await ipcRenderer.invoke("delete", "FeesPremium", {
+          PID: PolicyParams.PID,
+        });
+        await ipcRenderer.invoke("delete", "BillFees", {
+          PID: PolicyParams.PID,
+        });
+      }
+      await ipcRenderer.invoke("insert", "Policy", PolicyParams);
+
+      for (const element of CensusPremiumParams) {
+        await ipcRenderer.invoke("insert", "CensusPremium", element);
+      }
+      for (const element of FeesPremiumParams) {
+        await ipcRenderer.invoke("insert", "FeesPremium", element);
+      }
+      for (const element of BillFeesParams) {
+        await ipcRenderer.invoke("insert", "BillFees", element);
+      }
+      await this.getPolicies();
+      await this.getCensusPremium();
+      await this.getBillFees();
+      await this.getFeesPremium();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  handleCensusInsert = async (Params, New, Status) => {
+    var commd = "";
+    if (Status === "Actual") {
+      commd =
+        'select EE, ES, EC, EF from Census where Status = "Actual" and Customer = "' +
+        Params.Customer +
+        '" and CovDate = ';
+      commd += String(Params.CovDate);
+    } else if (Status === "Invoice") {
+      commd =
+        'select EE, ES, EC, EF from Census where Status = "Invoice" and Customer = "' +
+        Params.Customer +
+        '" and CovDate = ';
+      commd += String(Params.CovDate);
+      commd += " and InvDate = ";
+      commd += String(Params.InvDate);
+    } else if (Status === "Billed") {
+      commd =
+        'select EE, ES, EC, EF from Census where Status = "Billed" and Customer = "' +
+        Params.Customer +
+        '" and CovDate = ';
+      commd += String(Params.CovDate);
+      commd += " and InvDate = ";
+      commd += String(Params.InvDate);
+    }
+
+    console.log(commd);
+    const CensusByDate = await ipcRenderer.invoke("execute", commd);
+    const res = CensusByDate.res;
+    if (res.length === 1) {
+      Params.EE = Number(Params.EE) - Number(res[0].EE);
+      Params.ES = Number(Params.ES) - Number(res[0].ES);
+      Params.EC = Number(Params.EC) - Number(res[0].EC);
+      Params.EF = Number(Params.EF) - Number(res[0].EF);
+    }
+
+    if (res.length === 1 && New) {
+      this.showErrorModal(
+        "Census Error",
+        "An entry for this month already exist."
+      );
+    } else {
+      await ipcRenderer.invoke("insert", "CensusLog", Params);
+      await this.getCensus();
+      await this.getCensusInvoice();
+    }
+  };
+
+  handlePolicyDelete = async (PID) => {
+    try {
+      await ipcRenderer.invoke("delete", "Policy", { PID: PID });
+      await ipcRenderer.invoke("delete", "CensusPremium", {
+        PID: PID,
+      });
+      await ipcRenderer.invoke("delete", "FeesPremium", {
+        PID: PID,
+      });
+      await ipcRenderer.invoke("delete", "BillFees", {
+        PID: PID,
+      });
+
+      await this.getPolicies();
+      await this.getCensusPremium();
+      await this.getBillFees();
+      await this.getFeesPremium();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  handlePDF = async () => {
+    await ipcRenderer.invoke("billPDF");
+  };
+
+  handleCSV = async () => {
+    try {
+      await ipcRenderer.invoke("sharepoint");
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  qboSignIn = () => {
+    ipcRenderer.invoke("qboSignIn");
+  };
+
+  qboSignOut = async () => {
+    await ipcRenderer.invoke("qboSignOut");
+    this.getState();
+  };
+
+  refreshQBOData = async () => {
+    await ipcRenderer.invoke("qbo", "refreshQBOData");
+    this.getAppData();
+  };
+
+  getState = async () => {
+    console.log("geState");
+    try {
+      const result = await ipcRenderer.invoke("getState");
+      this.setState({ appstate: result });
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  getCustomers = async () => {
+    console.log("getCustomers");
+    const commd = "select * from Customer";
+    try {
+      const result = await ipcRenderer.invoke("execute", commd);
+      this.setState({ customers: result.res });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  getVendors = async () => {
+    console.log("getVendors");
+    const commd = "select * from Vendor";
+    try {
+      const result = await ipcRenderer.invoke("execute", commd);
+      this.setState({ vendors: result.res });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  getPolicies = async () => {
+    console.log("getPolicies");
+    const commd = "select * from Policy";
+    try {
+      const result = await ipcRenderer.invoke("execute", commd);
+      this.setState({ policies: result.res });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  getCensus = async () => {
+    console.log("getCensus");
+    const commd = "select * from Census";
+    try {
+      const result = await ipcRenderer.invoke("execute", commd);
+      this.setState({ census: result.res });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  getCensusPremium = async () => {
+    console.log("getCensusPremium");
+    const commd = "select * from CensusPremium";
+    try {
+      const result = await ipcRenderer.invoke("execute", commd);
+      this.setState({ censuspremium: result.res });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  getFeesPremium = async () => {
+    console.log("getFeesPremium");
+    const commd = "select * from FeesPremium";
+    try {
+      const result = await ipcRenderer.invoke("execute", commd);
+      this.setState({ feespremium: result.res });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  getBillFees = async () => {
+    console.log("getBillFees");
+    const commd = "select * from BillFees";
+    try {
+      const result = await ipcRenderer.invoke("execute", commd);
+      this.setState({ billfees: result.res });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  getItems = async () => {
+    console.log("getItems");
+    const commd = "select * from Item";
+    try {
+      const result = await ipcRenderer.invoke("execute", commd);
+      this.setState({ items: result.res });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  getAccounts = async () => {
+    console.log("getAccounts");
+    const commd = "select * from Account";
+    try {
+      const result = await ipcRenderer.invoke("execute", commd);
+      this.setState({ accounts: result.res });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  getCensusInvoice = async () => {
+    console.log("getCensusInvoice");
+    const commd =
+      'select "Customer", sum(EE) as EE, sum(ES) as ES, sum(EC) as EC, sum(EF) as EF, CovDate from "CensusLog"  where Status = "Invoice" group by "Customer", CovDate';
+    try {
+      const result = await ipcRenderer.invoke("execute", commd);
+      this.setState({ censusinvoice: result.res });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  getCensusBilled = async () => {
+    console.log("getCensusBilled");
+    const commd =
+      'select "Customer", sum(EE) as EE, sum(ES) as ES, sum(EC) as EC, sum(EF) as EF,  CovDate from "CensusLog" where Status = "Billed" group by "Customer". CovDate';
+
+    try {
+      const result = await ipcRenderer.invoke("execute", commd);
+      this.setState({ censusbilled: result.res });
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  getInvoice = async () => {
+    console.log("getInvoice");
+    const commd = "select * from Invoice";
+    try {
+      const result = await ipcRenderer.invoke("execute", commd);
+      this.setState({ invoice: result.res });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  getBill = async () => {
+    console.log("getBill");
+    const commd = "select * from Bill";
+    try {
+      const result = await ipcRenderer.invoke("execute", commd);
+      this.setState({ bill: result.res });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  isUserSignedInToQBO = () => {
+    const { appstate } = this.state;
+    try {
+      const rf_expire_date =
+        appstate.date_created + appstate.x_refresh_token_expires_in;
+      const qbo = rf_expire_date > Math.floor(Date.now() / 1000);
+      console.log(qbo);
+      this.setState({ qbo });
+    } catch (err) {
+      console.log("App State has not been retrieved!");
+    }
+  };
+
+  handleTab = (tab) => {
+    this.setState({ tab });
+  };
+
+  handleTabContent = (tab, tabState) => {
+    this.setState({ [tab]: tabState });
+  };
+
+  render() {
+    const {
+      tab,
+      customers,
+      vendors,
+      policies,
+      census,
+      censuspremium,
+      billfees,
+      feespremium,
+      customersTab,
+      vendorsTab,
+      items,
+      accounts,
+      censusinvoice,
+      censusbilled,
+      invoice,
+      bill,
+      username,
+    } = this.state;
+    const cProps = {
+      username,
+      invoice,
+      policies,
+      vendors,
+      customers,
+      census,
+      censuspremium,
+      billfees,
+      feespremium,
+      items,
+      accounts,
+      censusinvoice,
+      tabState: customersTab,
+      onInvoiceCreate: this.handleInvoiceCreate,
+      onTabContent: this.handleTabContent,
+      onCensusInsert: this.handleCensusInsert,
+      onPolicyInsert: this.handlePolicyInsert,
+      onPolicyDelete: this.handlePolicyDelete,
+    };
+
+    const vProps = {
+      vendors,
+      onTabContent: this.handleTabContent,
+      onPDF: this.handlePDF,
+      onBillCreate: this.handleBillCreate,
+      tabState: vendorsTab,
+
+      bill,
+
+      policies,
+      census,
+      censusinvoice,
+      censusbilled,
+      feespremium,
+      censuspremium,
+      billfees,
+      onCensusInsert: this.handleCensusInsert,
+      onInvoiceCreate: this.handleInvoiceCreate,
+    };
+
+    const qboButtons = {
+      qboSignOut: this.qboSignOut,
+      qboSignIn: this.qboSignIn,
+      refreshQBOData: this.refreshQBOData,
+      onPDF: this.handlePDF,
+      onCSV: this.handleCSV,
+    };
+    return (
+      <React.Fragment>
+        <Sidebar tab={tab} onTab={this.handleTab} />
+        {tab === "home" && (
+          <div className="content">
+            <Home {...qboButtons} />
+          </div>
+        )}
+        {tab === "customer" && (
+          <div className="content">
+            <Customer {...cProps} />
+          </div>
+        )}
+
+        {tab === "vendor" && (
+          <div className="content">
+            <Vendor {...vProps} />
+          </div>
+        )}
+        <ErrorModal
+          show={this.state.errorModal}
+          onHide={this.hideErrorModal}
+          errorTitle={this.state.errorModalTitle}
+          errorMessage={this.state.errorModalMessage}
+        />
+      </React.Fragment>
+    );
+  }
+}
+
+export default App;

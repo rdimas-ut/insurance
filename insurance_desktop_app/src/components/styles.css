@@ -1,0 +1,56 @@
+/* The side navigation menu */
+.sidebar {
+    margin: 0;
+    padding: 0;
+    width: 200px;
+    background-color: #f1f1f1;
+    position: fixed;
+    height: 100%;
+    overflow: auto;
+}
+
+/* Sidebar buttons */
+.sidebar button {
+    display: block;
+    color: black;
+    padding: 16px;
+    width: 200px;
+    text-decoration: none;
+    border: none;
+    text-align: left;
+}
+
+/* Links on mouse-over */
+.sidebar button:hover:not(.active) {
+    background-color: #555;
+    color: white;
+}
+
+.sidebar button:focus,
+.sidebar .selected:focus {
+    outline:none;
+    box-shadow: none;    
+}
+
+.sidebar .selected {
+    background-color: #555;
+    color: white;
+}
+
+/* Page content. The value of the margin-left property should match the value of the sidebar's width property */
+div.content {
+    margin-left: 200px;
+    margin-right: 50px;
+    padding: 1px 0px;
+    height: 400px;
+}
+
+.sidebar img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 15px;
+    padding-bottom: 15px;
+    width: 50px;
+    height: 120;
+}
