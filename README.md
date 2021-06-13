@@ -20,4 +20,4 @@ You will also see any lint errors in the console.
 
 Make sure you have the dependencies installed. Next run npm run build and after that run npm run package-win.
 
-![Alt text](readmepictures/Customers.png?raw=true "Title")
+![Alt text](readmepictures/Customers.png)
