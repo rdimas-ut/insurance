@@ -1,4 +1,4 @@
-# SABS APP
+# Insurance
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
@@ -19,3 +19,5 @@ You will also see any lint errors in the console.
 ### How to build the app
 
 Make sure you have the dependencies installed. Next run npm run build and after that run npm run package-win.
+
+![Alt text](readmepictures/Customers.png?raw=true "Title")
