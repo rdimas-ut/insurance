@@ -5,9 +5,18 @@ Part of this project was bootstrapped with [Create React App](https://github.com
 ## Introduction
 
 ## Stack
-<img style="padding-right: 80px" src="readmepictures/azurefunctions.svg" alt="drawing" width="200"/>
-<img style="padding-right: 80px" src="readmepictures/react.svg" alt="drawing" width="280"/>
-<img src="readmepictures/electronjs.PNG" alt="drawing" width="130"/>
+
+<div style="display: flex" class="row">
+  <div class="column">
+    <img style="flex: 33.33%; padding: 5px" src="readmepictures/azurefunctions.svg" alt="drawing" width="100"/>
+  </div>
+  <div class="column">
+    <img style="flex: 33.33%; padding: 5px" src="readmepictures/react.svg" alt="drawing" width="100"/>
+  </div>
+  <div class="column">
+    <img style="flex: 33.33%; padding: 5px" src="readmepictures/electronjs.PNG" alt="drawing" width="100"/>
+  </div>
+</div>
 
 
 ## Azure Back-end
