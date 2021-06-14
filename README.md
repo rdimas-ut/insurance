@@ -6,14 +6,14 @@ Part of this project was bootstrapped with [Create React App](https://github.com
 
 ## Stack
 
-<div style="display: flex" class="row">
-  <div class="column">
+<div style="display: flex">
+  <div>
     <img style="flex: 33.33%; padding: 5px" src="readmepictures/azurefunctions.svg" alt="drawing" width="100"/>
   </div>
-  <div class="column">
+  <div>
     <img style="flex: 33.33%; padding: 5px" src="readmepictures/react.svg" alt="drawing" width="100"/>
   </div>
-  <div class="column">
+  <div>
     <img style="flex: 33.33%; padding: 5px" src="readmepictures/electronjs.PNG" alt="drawing" width="100"/>
   </div>
 </div>
