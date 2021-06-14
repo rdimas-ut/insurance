@@ -7,9 +7,9 @@ Part of this project was bootstrapped with [Create React App](https://github.com
 ## Stack
 
 <div style="display: flex">
-    <img style="flex: 33.33%; padding: 5px" src="readmepictures/azurefunctions.svg" alt="drawing" width="100"/>
-    <img style="flex: 33.33%; padding: 5px" src="readmepictures/react.svg" alt="drawing" width="160"/>
-    <img style="flex: 33.33%; padding: 5px" src="readmepictures/electronjs.PNG" alt="drawing" width="100"/>
+    <img style="flex: 33.33%; padding: 5px; cursor: unset;" src="readmepictures/azurefunctions.svg" alt="drawing" width="100"/>
+    <img style="flex: 33.33%; padding: 5px; cursor: unset;" src="readmepictures/react.svg" alt="drawing" width="160"/>
+    <img style="flex: 33.33%; padding: 5px; cursor: unset;" src="readmepictures/electronjs.PNG" alt="drawing" width="100"/>
 </div>
 
 
